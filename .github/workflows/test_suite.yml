@@ -16,8 +16,9 @@ jobs:
       with:
         python-version: '3.13'
 
-    # Install any dependencies needed to run your implementation here
-    # See examples at https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.4.1'
 
     - name: Run tests
       timeout-minutes: 5
