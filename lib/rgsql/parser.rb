@@ -40,21 +40,18 @@ module RgSql
     private
 
     def parse_create_table
-      table = statement.consume(IDENTIFIER)
-
-      statement.consume(/\(/)
+      table = statement.consume!(IDENTIFIER)
+      statement.consume!(/\(/)
       columns = parse_list do
         parse_column_definition
       end
-      statement.consume(/\)/)
+      statement.consume!(/\)/)
       CreateTable.new(table:, columns:)
     end
 
     def parse_column_definition
-      name = statement.consume(IDENTIFIER)
-      raise ParsingError, 'Expected column name' unless name
-
-      type = statement.consume(IDENTIFIER).upcase
+      name = statement.consume!(IDENTIFIER)
+      type = statement.consume!(IDENTIFIER).upcase
       raise ParsingError, "Unknown type #{type}" unless TYPES.include?(type)
 
       Column.new(name:, type:)
@@ -62,7 +59,7 @@ module RgSql
 
     def parse_drop_table
       if_exists = statement.consume(/IF EXISTS/) ? true : false
-      table = statement.consume(IDENTIFIER)
+      table = statement.consume!(IDENTIFIER)
       DropTable.new(table:, if_exists:)
     end
 
@@ -93,7 +90,7 @@ module RgSql
 
     def parse_select_list_item_name
       if statement.consume(/AS/)
-        statement.consume(IDENTIFIER)
+        statement.consume!(IDENTIFIER)
       else
         '???'
       end
