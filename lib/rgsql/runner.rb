@@ -18,7 +18,9 @@ module RgSql
     private
 
     def execute_select(ast)
-      ast.select_list.map(&:value)
+      values = ast.select_list.map { |item| item.value.value }
+      names = ast.select_list.map(&:name)
+      [values, names]
     end
   end
 end

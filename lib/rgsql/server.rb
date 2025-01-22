@@ -24,9 +24,9 @@ module RgSql
 
     def execute(sql)
       ast = Parser.new(sql).to_ast
-      row = Runner.new(ast).execute
+      row, column_names = Runner.new(ast).execute
 
-      { status: 'ok', rows: [row] }.to_json
+      { status: 'ok', rows: [row], column_names: }.to_json
     rescue ParsingError => e
       { status: 'error', error_type: 'parsing_error', error_message: e.message }.to_json
     end

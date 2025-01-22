@@ -4,7 +4,9 @@ module RgSql
     Bool = Data.define(:value)
 
     Select = Data.define(:select_list)
+    SelectListItem = Data.define(:name, :value)
 
+    IDENTIFIER = /[a-z_][a-z\d_]*/
     INTEGER = /-?\d+/
 
     attr_reader :statement
@@ -39,11 +41,21 @@ module RgSql
       values = []
 
       loop do
-        values << parse_literal
+        value = parse_literal
+        name = parse_select_list_item_name
+        values << SelectListItem.new(name:, value:)
         break unless statement.consume(/,/)
       end
 
       values
+    end
+
+    def parse_select_list_item_name
+      if statement.consume('AS')
+        statement.consume(IDENTIFIER)
+      else
+        '???'
+      end
     end
 
     def parse_literal
