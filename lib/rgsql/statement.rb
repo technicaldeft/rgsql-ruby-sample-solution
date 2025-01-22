@@ -14,5 +14,13 @@ module RgSql
       @rest = match.post_match
       match.to_a.last
     end
+
+    def consume!(regex)
+      result = consume(regex)
+
+      raise ParsingError, "Expected to match #{regex} but could not in #{rest}" unless result
+
+      result
+    end
   end
 end
