@@ -13,8 +13,22 @@ module RgSql
         message = @socket.gets("\0")
         break if message.nil?
 
-        @socket.print("hello\0")
+        sql = message.chomp("\0")
+        response = execute(sql)
+        @socket.print response
+        @socket.print("\0")
       end
+    end
+
+    private
+
+    def execute(sql)
+      ast = Parser.new(sql).to_ast
+      row = Runner.new(ast).execute
+
+      { status: 'ok', rows: [row] }.to_json
+    rescue ParsingError => e
+      { status: 'error', error_type: 'parsing_error', error_message: e.message }.to_json
     end
   end
 end
