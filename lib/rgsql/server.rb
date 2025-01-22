@@ -3,7 +3,10 @@ require 'json'
 
 module RgSql
   class Server
-    def initialize
+    attr_reader :database
+
+    def initialize(database)
+      @database = database
       @server = TCPServer.new 3003
       @socket = @server.accept
     end
@@ -23,12 +26,12 @@ module RgSql
     private
 
     def execute(sql)
-      ast = Parser.new(sql).to_ast
-      row, column_names = Runner.new(ast).execute
-
-      { status: 'ok', rows: [row], column_names: }.to_json
+      result = RgSql.run(database, sql)
+      result.to_json
     rescue ParsingError => e
       { status: 'error', error_type: 'parsing_error', error_message: e.message }.to_json
+    rescue ValidationError => e
+      { status: 'error', error_type: 'validation_error', error_message: e.message }.to_json
     end
   end
 end
