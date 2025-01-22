@@ -41,11 +41,10 @@ module RgSql
 
     def parse_create_table
       table = statement.consume(IDENTIFIER)
+
       statement.consume(/\(/)
-      columns = []
-      loop do
-        columns << parse_column_definition
-        break unless statement.consume(/,/)
+      columns = parse_list do
+        parse_column_definition
       end
       statement.consume(/\)/)
       CreateTable.new(table:, columns:)
@@ -74,13 +73,19 @@ module RgSql
     def parse_select_list
       return [] if statement.consume(/;/)
 
+      parse_list do
+        value = parse_literal
+        name = parse_select_list_item_name
+        SelectListItem.new(name:, value:)
+      end
+    end
+
+    def parse_list(separator = /,/)
       values = []
 
       loop do
-        value = parse_literal
-        name = parse_select_list_item_name
-        values << SelectListItem.new(name:, value:)
-        break unless statement.consume(/,/)
+        values << yield
+        break unless statement.consume(separator)
       end
 
       values
