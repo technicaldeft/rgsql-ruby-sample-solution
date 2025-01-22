@@ -1,8 +1,9 @@
 module RgSql
   class Runner
-    attr_reader :ast
+    attr_reader :ast, :database
 
-    def initialize(ast)
+    def initialize(database, ast)
+      @database = database
       @ast = ast
     end
 
@@ -10,6 +11,10 @@ module RgSql
       case ast
       when Parser::Select
         execute_select(ast)
+      when Parser::CreateTable
+        execute_create_table(ast)
+      when Parser::DropTable
+        execute_drop_table(ast)
       else
         raise "unexpected node #{ast.class}"
       end
@@ -17,10 +22,20 @@ module RgSql
 
     private
 
+    def execute_create_table(ast)
+      database.create_table(ast.table, ast.columns)
+      { status: 'ok' }
+    end
+
+    def execute_drop_table(ast)
+      database.drop_table(ast.table, ast.if_exists)
+      { status: 'ok' }
+    end
+
     def execute_select(ast)
-      values = ast.select_list.map { |item| item.value.value }
-      names = ast.select_list.map(&:name)
-      [values, names]
+      row = ast.select_list.map { |item| item.value.value }
+      column_names = ast.select_list.map(&:name)
+      { status: 'ok', rows: [row], column_names: }
     end
   end
 end
