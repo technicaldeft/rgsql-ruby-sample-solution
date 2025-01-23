@@ -1,5 +1,7 @@
 module RgSql
   class Runner
+    include Nodes
+
     attr_reader :ast, :database
 
     def initialize(database, ast)
@@ -9,13 +11,13 @@ module RgSql
 
     def execute
       case ast
-      when Parser::Select
+      when Select
         execute_select(ast)
-      when Parser::CreateTable
+      when CreateTable
         execute_create_table(ast)
-      when Parser::DropTable
+      when DropTable
         execute_drop_table(ast)
-      when Parser::Insert
+      when Insert
         execute_insert(ast)
       else
         raise "unexpected node #{ast.class}"
