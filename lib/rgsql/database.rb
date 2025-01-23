@@ -4,13 +4,18 @@ module RgSql
       @tables = {}
     end
 
+    def insert(name, rows)
+      @tables[name].insert(rows)
+    end
+
+    def get_table(name)
+      @tables.fetch(name)
+    end
+
     def create_table(name, columns)
       raise ValidationError, "table `#{name}` already exists" if @tables[name]
 
-      column_names = columns.map(&:name)
-      raise ValidationError, 'duplicate column name' if column_names.uniq.count < column_names.count
-
-      @tables[name] = true
+      @tables[name] = Table.new(name, columns)
     end
 
     def drop_table(name, if_exists)
