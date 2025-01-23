@@ -3,6 +3,8 @@ require 'rgsql/parser'
 require 'rgsql/runner'
 require 'rgsql/statement'
 require 'rgsql/database'
+require 'rgsql/select_runner'
+require 'rgsql/table'
 
 module RgSql
   class ParsingError < StandardError

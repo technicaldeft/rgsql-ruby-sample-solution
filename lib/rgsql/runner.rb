@@ -15,6 +15,8 @@ module RgSql
         execute_create_table(ast)
       when Parser::DropTable
         execute_drop_table(ast)
+      when Parser::Insert
+        execute_insert(ast)
       else
         raise "unexpected node #{ast.class}"
       end
@@ -22,8 +24,19 @@ module RgSql
 
     private
 
+    def execute_insert(ast)
+      database.insert(ast.table, ast.rows)
+      { status: 'ok' }
+    end
+
     def execute_create_table(ast)
-      database.create_table(ast.table, ast.columns)
+      columns = {}
+      ast.columns.map do |column|
+        raise ValidationError, "duplicate column name #{column.name}" if columns.key?(column.name)
+
+        columns[column.name] = column.type
+      end
+      database.create_table(ast.table, columns)
       { status: 'ok' }
     end
 
@@ -32,10 +45,8 @@ module RgSql
       { status: 'ok' }
     end
 
-    def execute_select(ast)
-      row = ast.select_list.map { |item| item.value.value }
-      column_names = ast.select_list.map(&:name)
-      { status: 'ok', rows: [row], column_names: }
+    def execute_select(select)
+      SelectRunner.new(database, select).run
     end
   end
 end
