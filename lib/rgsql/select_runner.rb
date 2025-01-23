@@ -1,5 +1,7 @@
 module RgSql
   class SelectRunner
+    include Nodes
+
     attr_reader :database, :select
 
     def initialize(database, select)
@@ -27,7 +29,7 @@ module RgSql
 
     def evaluate(item, row)
       case item.value
-      when Parser::Reference
+      when Reference
         index = @table.column_index(item.value.name)
         row[index].value
       else

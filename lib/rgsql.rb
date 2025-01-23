@@ -1,3 +1,4 @@
+require 'rgsql/nodes'
 require 'rgsql/server'
 require 'rgsql/parser'
 require 'rgsql/runner'
