@@ -3,11 +3,13 @@ module RgSql
     Int = Data.define(:value)
     Bool = Data.define(:value)
 
-    Select = Data.define(:select_list)
+    Select = Data.define(:select_list, :table)
     SelectListItem = Data.define(:name, :value)
     CreateTable = Data.define(:table, :columns)
     Column = Data.define(:name, :type)
     DropTable = Data.define(:table, :if_exists)
+    Insert = Data.define(:table, :rows)
+    Reference = Data.define(:name)
 
     IDENTIFIER = /[a-z_][a-z\d_]*/i
     INTEGER = /-?\d+/
@@ -26,6 +28,8 @@ module RgSql
               parse_create_table
             elsif statement.consume(/DROP TABLE/)
               parse_drop_table
+            elsif statement.consume(/INSERT INTO/)
+              parse_insert
             else
               raise ParsingError, "Unknown statement #{statement.rest}"
             end
@@ -64,17 +68,42 @@ module RgSql
     end
 
     def parse_select
-      Select.new(select_list: parse_select_list)
+      select_list = parse_select_list
+      table = statement.consume!(IDENTIFIER) if statement.consume(/FROM/)
+      Select.new(select_list:, table:)
     end
 
     def parse_select_list
       return [] if statement.consume(/;/)
 
       parse_list do
-        value = parse_literal
-        name = parse_select_list_item_name
+        literal = parse_literal
+        reference = statement.consume!(IDENTIFIER) if literal.nil?
+
+        value = literal || Reference.new(reference)
+        name = parse_select_list_item_name || reference || '???'
         SelectListItem.new(name:, value:)
       end
+    end
+
+    def parse_insert
+      table = statement.consume!(IDENTIFIER)
+      statement.consume!(/VALUES/)
+
+      rows = parse_list do
+        parse_insert_row
+      end
+
+      Insert.new(table:, rows:)
+    end
+
+    def parse_insert_row
+      statement.consume!(/\(/)
+      row = parse_list do
+        parse_literal!
+      end
+      statement.consume!(/\)/)
+      row
     end
 
     def parse_list(separator = /,/)
@@ -89,11 +118,7 @@ module RgSql
     end
 
     def parse_select_list_item_name
-      if statement.consume(/AS/)
-        statement.consume!(IDENTIFIER)
-      else
-        '???'
-      end
+      statement.consume!(IDENTIFIER) if statement.consume(/AS/)
     end
 
     def parse_literal
@@ -103,9 +128,11 @@ module RgSql
         Bool.new(false)
       elsif (literal = statement.consume(INTEGER))
         Int.new(literal.to_i)
-      else
-        raise ParsingError, "unexpected literal #{statement.rest}"
       end
+    end
+
+    def parse_literal!
+      parse_literal || (raise ParsingError, "unexpected literal #{statement.rest}")
     end
   end
 end
