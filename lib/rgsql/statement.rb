@@ -1,26 +1,49 @@
 module RgSql
   class Statement
-    attr_reader :rest
-
     def initialize(sql)
       @sql = sql
-      @rest = sql.lstrip
+      @tokens = Tokenizer.new(sql).tokenize
     end
 
-    def consume(regex)
-      match = rest.match(/\A(#{regex})\s*/i)
-      return unless match
-
-      @rest = match.post_match
-      match.to_a.last
+    def empty?
+      @tokens.empty?
     end
 
-    def consume!(regex)
-      result = consume(regex)
+    def next_token
+      @tokens.first
+    end
 
-      raise ParsingError, "Expected to match #{regex} but could not in #{rest}" unless result
+    def consume(type, value = nil)
+      return unless next_token && next_token.type == type
+
+      if value.nil? || next_token.value == value
+        token = next_token
+        @tokens.shift
+        token.value
+      end
+    end
+
+    def consume!(type, value = nil)
+      result = consume(type, value)
+      raise ParsingError, consume_error_message(type, value) unless result
 
       result
+    end
+
+    private
+
+    def consume_error_message(type, value)
+      expectation = if value.nil?
+                      type
+                    else
+                      "#{type} with value `#{value}`"
+                    end
+
+      if next_token.nil?
+        "expecting token of type #{expectation} but reached end of query"
+      else
+        "expecting token of type #{expectation} but found #{next_token.type} with value `#{next_token.value}`"
+      end
     end
   end
 end
