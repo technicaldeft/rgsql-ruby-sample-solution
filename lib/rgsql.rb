@@ -7,6 +7,8 @@ require 'rgsql/statement'
 require 'rgsql/database'
 require 'rgsql/select_runner'
 require 'rgsql/table'
+require 'rgsql/expression_parser'
+require 'rgsql/expression'
 
 module RgSql
   class ParsingError < StandardError
