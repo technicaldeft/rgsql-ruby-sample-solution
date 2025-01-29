@@ -6,15 +6,9 @@ module RgSql
       def evaluate(expression, row = [], table = nil)
         case expression
         when Operator
-          evaluated_operands = expression.operands.map do |operand|
-            evaluate(operand, row, table)
-          end
-          evaluate_operator(expression.operator, evaluated_operands)
+          evaluate_operator(expression.operator, evaluate_list(expression.operands, row, table))
         when Function
-          evaluated_arguments = expression.arguments.map do |argument|
-            evaluate(argument, row, table)
-          end
-          evaluate_function(expression.name, evaluated_arguments)
+          evaluate_function(expression.name, evaluate_list(expression.arguments, row, table))
         when Reference
           table.get_reference(row, expression.name)
         when Int, Bool
@@ -25,6 +19,10 @@ module RgSql
       end
 
       private
+
+      def evaluate_list(expressions, row, table)
+        expressions.map { |expression| evaluate(expression, row, table) }
+      end
 
       def evaluate_function(name, arguments)
         arg1 = arguments[0]
