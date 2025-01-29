@@ -4,11 +4,12 @@ module RgSql
     Bool = Data.define(:value)
 
     Select = Data.define(:select_list, :table)
-    SelectListItem = Data.define(:name, :value)
+    SelectListItem = Data.define(:name, :expression)
     CreateTable = Data.define(:table, :columns)
     Column = Data.define(:name, :type)
     DropTable = Data.define(:table, :if_exists)
     Insert = Data.define(:table, :rows)
     Reference = Data.define(:name)
+    Operator = Data.define(:operator, :operands)
   end
 end

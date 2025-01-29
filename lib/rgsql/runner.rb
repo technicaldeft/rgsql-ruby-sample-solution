@@ -27,7 +27,11 @@ module RgSql
     private
 
     def execute_insert(ast)
-      database.insert(ast.table, ast.rows)
+      rows = ast.rows.map do |row|
+        row.map { |value| Expression.evaluate(value) }
+      end
+
+      database.insert(ast.table, rows)
       { status: 'ok' }
     end
 
