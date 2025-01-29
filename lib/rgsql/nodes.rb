@@ -11,5 +11,6 @@ module RgSql
     Insert = Data.define(:table, :rows)
     Reference = Data.define(:name)
     Operator = Data.define(:operator, :operands)
+    Function = Data.define(:name, :arguments)
   end
 end
