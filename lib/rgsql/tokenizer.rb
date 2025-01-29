@@ -1,13 +1,20 @@
 module RgSql
   class Tokenizer
+    def self.union(array)
+      array.map { |value| Regexp.escape(value) }.join('|')
+    end
+
     KEYWORDS = %w[
       SELECT FROM AS BOOLEAN INTEGER CREATE DROP TABLE IF EXISTS INSERT INTO VALUES
     ].freeze
     BOOLEANS = %w[TRUE FALSE].freeze
+    OPERATOR_WORDS = %w[AND NOT OR].freeze
+    OPERATOR_SYMBOLS = %w[+ - * / = <> <= >= < >].freeze
 
     WORD_PATTERN = /\A[a-z_][a-z_\d]*/i
     INTEGER_PATTERN = /\A-?\d+/
     SYMBOLS_PATTERN = /\A\(|\)|,|;/
+    OPERATOR_SYMBOLS_PATTERN = /\A(#{union(OPERATOR_SYMBOLS)})/i
 
     Token = Data.define(:type, :value)
 
@@ -30,6 +37,8 @@ module RgSql
                    tokenize_word(match.to_a.first)
                  elsif (match = rest.match(INTEGER_PATTERN))
                    Token.new(:integer, match.to_a.first.to_i)
+                 elsif (match = rest.match(OPERATOR_SYMBOLS_PATTERN))
+                   Token.new(:operator, match.to_a.first.upcase)
                  elsif (match = rest.match(SYMBOLS_PATTERN))
                    Token.new(:symbol, match.to_a.first)
                  else
@@ -44,6 +53,8 @@ module RgSql
         Token.new(:keyword, word.upcase)
       elsif BOOLEANS.include?(word.upcase)
         Token.new(:boolean, word.upcase)
+      elsif OPERATOR_WORDS.include?(word.upcase)
+        Token.new(:operator, word.upcase)
       else
         Token.new(:identifier, word)
       end

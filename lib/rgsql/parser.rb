@@ -70,12 +70,11 @@ module RgSql
       return [] if statement.consume(:symbol, ';')
 
       parse_list do
-        literal = parse_literal
-        reference = statement.consume!(:identifier) if literal.nil?
+        expression = ExpressionParser.parse(statement)
 
-        value = literal || Reference.new(reference)
-        name = parse_select_list_item_name || reference || '???'
-        SelectListItem.new(name:, value:)
+        reference_name = expression.is_a?(Reference) && expression.name
+        name = parse_select_list_item_name || reference_name || '???'
+        SelectListItem.new(name:, expression:)
       end
     end
 
@@ -93,7 +92,7 @@ module RgSql
     def parse_insert_row
       statement.consume!(:symbol, '(')
       row = parse_list do
-        parse_literal!
+        ExpressionParser.parse(statement)
       end
       statement.consume!(:symbol, ')')
       row
@@ -112,18 +111,6 @@ module RgSql
 
     def parse_select_list_item_name
       statement.consume!(:identifier) if statement.consume(:keyword, 'AS')
-    end
-
-    def parse_literal
-      if (boolean = statement.consume(:boolean))
-        Bool.new(boolean == 'TRUE')
-      elsif (integer = statement.consume(:integer))
-        Int.new(integer)
-      end
-    end
-
-    def parse_literal!
-      parse_literal || (raise ParsingError, "Expected literal but was #{statement.next_token}")
     end
   end
 end
