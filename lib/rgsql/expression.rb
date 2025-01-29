@@ -10,6 +10,11 @@ module RgSql
             evaluate(operand, row, table)
           end
           evaluate_operator(expression.operator, evaluated_operands)
+        when Function
+          evaluated_arguments = expression.arguments.map do |argument|
+            evaluate(argument, row, table)
+          end
+          evaluate_function(expression.name, evaluated_arguments)
         when Reference
           table.get_reference(row, expression.name)
         when Int, Bool
@@ -20,6 +25,20 @@ module RgSql
       end
 
       private
+
+      def evaluate_function(name, arguments)
+        arg1 = arguments[0]
+        arg2 = arguments[1]
+
+        case name
+        when 'ABS'
+          Int.new(arg1.value.abs)
+        when 'MOD'
+          Int.new(arg1.value % arg2.value)
+        else
+          raise "unknown function #{name}"
+        end
+      end
 
       def evaluate_operator(operator, operands)
         op1 = operands[0]
