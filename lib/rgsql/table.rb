@@ -16,6 +16,16 @@ module RgSql
       column_names.index(name)
     end
 
+    def get_reference(row, name)
+      index = column_index(name)
+
+      if index
+        row[index]
+      else
+        raise("column with name #{name} not found")
+      end
+    end
+
     private
 
     def column_names

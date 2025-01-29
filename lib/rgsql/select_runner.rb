@@ -17,7 +17,7 @@ module RgSql
     def run
       rows = @table.rows.map do |row|
         select.select_list.map do |item|
-          evaluate(item, row)
+          evaluate(item.expression, row)
         end
       end
 
@@ -27,14 +27,8 @@ module RgSql
 
     private
 
-    def evaluate(item, row)
-      case item.value
-      when Reference
-        index = @table.column_index(item.value.name)
-        row[index].value
-      else
-        item.value.value
-      end
+    def evaluate(expression, row)
+      Expression.evaluate(expression, row, @table).value
     end
   end
 end
