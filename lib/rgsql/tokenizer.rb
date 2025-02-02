@@ -10,6 +10,7 @@ module RgSql
     BOOLEANS = %w[TRUE FALSE].freeze
     OPERATOR_WORDS = %w[AND NOT OR].freeze
     OPERATOR_SYMBOLS = %w[+ - * / = <> <= >= < >].freeze
+    NULL = 'NULL'.freeze
 
     WORD_PATTERN = /\A[a-z_][a-z_\d]*/i
     INTEGER_PATTERN = /\A-?\d+/
@@ -55,6 +56,8 @@ module RgSql
         Token.new(:boolean, word.upcase)
       elsif OPERATOR_WORDS.include?(word.upcase)
         Token.new(:operator, word.upcase)
+      elsif word.upcase == NULL
+        Token.new(:null, word.upcase)
       else
         Token.new(:identifier, word)
       end
