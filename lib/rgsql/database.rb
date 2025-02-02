@@ -5,11 +5,11 @@ module RgSql
     end
 
     def insert(name, rows)
-      @tables[name].insert(rows)
+      get_table(name).insert(rows)
     end
 
     def get_table(name)
-      @tables.fetch(name)
+      @tables.fetch(name) { raise ValidationError, "table `#{name}` does not exist" }
     end
 
     def create_table(name, columns)

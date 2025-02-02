@@ -27,11 +27,9 @@ module RgSql
     private
 
     def execute_insert(ast)
-      rows = ast.rows.map do |row|
-        row.map { |value| Expression.evaluate(value) }
-      end
-
-      database.insert(ast.table, rows)
+      table = database.get_table(ast.table)
+      table.validate_insert(ast.rows)
+      table.insert(ast.rows)
       { status: 'ok' }
     end
 
@@ -52,7 +50,9 @@ module RgSql
     end
 
     def execute_select(select)
-      SelectRunner.new(database, select).run
+      runner = SelectRunner.new(database, select)
+      runner.validate
+      runner.run
     end
   end
 end
