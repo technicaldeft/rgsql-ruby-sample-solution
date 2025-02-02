@@ -12,6 +12,12 @@ module RgSql
       end
     end
 
+    Null = Data.define do
+      def value
+        nil
+      end
+    end
+
     Select = Data.define(:select_list, :table)
     SelectListItem = Data.define(:name, :expression)
     CreateTable = Data.define(:table, :columns)
