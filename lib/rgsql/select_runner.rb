@@ -14,6 +14,12 @@ module RgSql
                end
     end
 
+    def validate
+      select.select_list.each do |item|
+        Expression.type(item.expression, @table)
+      end
+    end
+
     def run
       rows = @table.rows.map do |row|
         select.select_list.map do |item|
