@@ -29,6 +29,8 @@ module RgSql
         Bool.new(boolean == 'TRUE')
       elsif (integer = statement.consume(:integer))
         Int.new(integer)
+      elsif (operator = statement.consume(:null))
+        Null.new
       elsif (operator = statement.consume(:operator))
         parse_prefix_operator(operator)
       elsif statement.consume(:symbol, '(')
