@@ -1,5 +1,6 @@
 require 'rgsql/nodes'
 require 'rgsql/callable'
+require 'rgsql/types'
 require 'rgsql/tokenizer'
 require 'rgsql/server'
 require 'rgsql/parser'

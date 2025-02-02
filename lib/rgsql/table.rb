@@ -10,7 +10,7 @@ module RgSql
 
     def insert(new_rows)
       evaluated_rows = new_rows.map do |row|
-        row.map { |expression| Expression.evaluate(expression) }
+        padded_row(row).map { |expression| Expression.evaluate(expression) }
       end
 
       @rows += evaluated_rows
@@ -41,7 +41,7 @@ module RgSql
           expected_type = column_type(column)
           actual_type = Expression.type(expression, self)
 
-          if expected_type != actual_type
+          unless Types.match?(expected_type, actual_type)
             raise ValidationError, "Invalid type for #{column}, expected #{expected_type} but was #{actual_type}"
           end
         end
@@ -49,6 +49,10 @@ module RgSql
     end
 
     private
+
+    def padded_row(row)
+      row + Array.new(column_definitions.size - row.size) { Nodes::Null.new }
+    end
 
     def column_name(index)
       column_names[index]
