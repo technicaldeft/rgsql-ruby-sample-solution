@@ -32,6 +32,8 @@ module RgSql
       { status: 'error', error_type: 'parsing_error', error_message: e.message }.to_json
     rescue ValidationError => e
       { status: 'error', error_type: 'validation_error', error_message: e.message }.to_json
+    rescue ZeroDivisionError => e
+      { status: 'error', error_type: 'division_by_zero_error', error_message: e.message }.to_json
     end
   end
 end
