@@ -2,7 +2,10 @@ module RgSql
   class Parser
     include Nodes
 
-    TYPES = %w[INTEGER BOOLEAN].freeze
+    TYPES = {
+      'INTEGER' => Int,
+      'BOOLEAN' => Bool
+    }.freeze
 
     attr_reader :statement
 
@@ -47,9 +50,8 @@ module RgSql
 
     def parse_column_definition
       name = statement.consume!(:identifier)
-      type = statement.consume!(:keyword).upcase
-      raise ParsingError, "Unknown type #{type}" unless TYPES.include?(type)
-
+      type_name = statement.consume!(:keyword).upcase
+      type = TYPES.fetch(type_name) { raise ParsingError, "Unknown type #{type_name}" }
       Column.new(name:, type:)
     end
 

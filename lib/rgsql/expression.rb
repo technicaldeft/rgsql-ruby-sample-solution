@@ -3,6 +3,19 @@ module RgSql
     class << self
       include Nodes
 
+      def type(expression, table)
+        case expression
+        when Operator
+          type_operator(expression.operator, type_list(expression.operands, table))
+        when Function
+          type_function(expression.name, type_list(expression.arguments, table))
+        when Int, Bool
+          expression.class
+        when Reference
+          table.column_type(expression.name)
+        end
+      end
+
       def evaluate(expression, row = [], table = nil)
         case expression
         when Operator
@@ -20,8 +33,62 @@ module RgSql
 
       private
 
+      def type_operator(operator, operand_types)
+        case operator
+        when '+', '-', '*', '/'
+          if operand_types.all? { |type| type == Int }
+            Int
+          else
+            raise ValidationError, "Invalid types for operator #{operator}: #{operand_types}"
+          end
+        when 'NOT'
+          if operand_types == [Bool]
+            Bool
+          else
+            raise ValidationError, "Invalid types for operator #{operator}: #{operand_types}"
+          end
+        when 'AND', 'OR'
+          if operand_types == [Bool, Bool]
+            Bool
+          else
+            raise ValidationError, "Invalid types for operator #{operator}: #{operand_types}"
+          end
+        when '<', '>', '>=', '<=', '=', '<>'
+          if [[Int, Int], [Bool, Bool]].include?(operand_types)
+            Bool
+          else
+            raise ValidationError, "Invalid types for operator #{operator}: #{operand_types}"
+          end
+        else
+          raise "unknown operator #{operator}"
+        end
+      end
+
+      def type_function(name, argument_types)
+        case name
+        when 'ABS'
+          if argument_types == [Int]
+            Int
+          else
+            raise ValidationError, "Invalid types for function #{name}: #{argument_types}"
+          end
+        when 'MOD'
+          if argument_types == [Int, Int]
+            Int
+          else
+            raise ValidationError, "Invalid types for function #{name}: #{argument_types}"
+          end
+        else
+          raise ValidationError, "unknown function #{name}"
+        end
+      end
+
       def evaluate_list(expressions, row, table)
         expressions.map { |expression| evaluate(expression, row, table) }
+      end
+
+      def type_list(expressions, table)
+        expressions.map { |expression| type(expression, table) }
       end
 
       def evaluate_function(name, arguments)
