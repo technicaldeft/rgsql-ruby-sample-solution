@@ -9,9 +9,11 @@ module RgSql
     end
 
     def insert(new_rows)
-      new_rows.each do |row|
-        @rows << row.map { |expression| Expression.evaluate(expression) }
+      evaluated_rows = new_rows.map do |row|
+        row.map { |expression| Expression.evaluate(expression) }
       end
+
+      @rows += evaluated_rows
     end
 
     def column_index(name)
