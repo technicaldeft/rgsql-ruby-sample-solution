@@ -9,7 +9,7 @@ module RgSql
           type_operator(expression, type_list(expression.operands, table))
         when Function
           type_function(expression, type_list(expression.arguments, table))
-        when Int, Bool
+        when Int, Bool, Null
           expression.class
         when Reference
           table.column_type(expression.name)
@@ -26,7 +26,7 @@ module RgSql
           Callable.find_function(expression.name).call(arguments)
         when Reference
           table.get_reference(row, expression.name)
-        when Int, Bool
+        when Int, Bool, Null
           expression
         else
           raise "unknown expression #{expression.inspect} of type #{expression.class}"
