@@ -18,7 +18,7 @@ module RgSql
       end
     end
 
-    Select = Data.define(:select_list, :table)
+    Select = Data.define(:select_list, :table, :where)
     SelectListItem = Data.define(:name, :expression)
     CreateTable = Data.define(:table, :columns)
     Column = Data.define(:name, :type)
