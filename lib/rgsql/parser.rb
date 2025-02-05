@@ -65,7 +65,8 @@ module RgSql
     def parse_select
       select_list = parse_select_list
       table = statement.consume!(:identifier) if statement.consume(:keyword, 'FROM')
-      Select.new(select_list:, table:)
+      where = statement.consume(:keyword, 'WHERE') ? ExpressionParser.parse(statement) : Bool.new(true)
+      Select.new(select_list:, table:, where:)
     end
 
     def parse_select_list
