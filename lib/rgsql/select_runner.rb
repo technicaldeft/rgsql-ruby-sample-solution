@@ -15,15 +15,23 @@ module RgSql
     end
 
     def validate
+      unless Types.match?(Bool, Expression.type(select.where, @table))
+        raise ValidationError, 'where clause must evaluate to a boolean'
+      end
+
       select.select_list.each do |item|
         Expression.type(item.expression, @table)
       end
     end
 
     def run
-      rows = @table.rows.map do |row|
+      rows = @table.rows.select do |row|
+        evaluate(select.where, row) == Bool.new(true)
+      end
+
+      rows = rows.map do |row|
         select.select_list.map do |item|
-          evaluate(item.expression, row)
+          evaluate(item.expression, row).value
         end
       end
 
@@ -34,7 +42,7 @@ module RgSql
     private
 
     def evaluate(expression, row)
-      Expression.evaluate(expression, row, @table).value
+      Expression.evaluate(expression, row, @table)
     end
   end
 end
