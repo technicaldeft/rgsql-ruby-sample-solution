@@ -1,7 +1,16 @@
 module RgSql
   module Nodes
-    Int = Data.define(:value)
-    Bool = Data.define(:value)
+    Int = Data.define(:value) do
+      def to_i
+        value
+      end
+    end
+
+    Bool = Data.define(:value) do
+      def to_i
+        value ? 1 : 0
+      end
+    end
 
     Select = Data.define(:select_list, :table)
     SelectListItem = Data.define(:name, :expression)
