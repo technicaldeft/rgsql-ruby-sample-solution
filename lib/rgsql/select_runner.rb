@@ -25,6 +25,8 @@ module RgSql
         type = Expression.type(item.expression, metadata)
         metadata.add_select_list_item(item.name, type)
       end
+
+      Expression.type(select.order.expression, metadata) if select.order
     end
 
     def run
@@ -41,6 +43,12 @@ module RgSql
         end
       end
 
+      if select.order
+        rows = rows.sort do |row_a, row_b|
+          comparison_value(row_a, row_b)
+        end
+      end
+
       output_rows = rows.map { |row| metadata.get_select_list(row).map(&:value) }
 
       column_names = select.select_list.map(&:name)
@@ -48,6 +56,17 @@ module RgSql
     end
 
     private
+
+    def comparison_value(row_a, row_b)
+      value_a = evaluate(select.order.expression, row_a)
+      value_b = evaluate(select.order.expression, row_b)
+
+      if select.order.ascending
+        value_a <=> value_b
+      else
+        value_b <=> value_a
+      end
+    end
 
     def evaluate(expression, row)
       Expression.evaluate(expression, row, metadata)
