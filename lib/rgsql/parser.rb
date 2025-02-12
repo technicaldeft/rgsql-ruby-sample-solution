@@ -66,7 +66,8 @@ module RgSql
       select_list = parse_select_list
       table = statement.consume!(:identifier) if statement.consume(:keyword, 'FROM')
       where = statement.consume(:keyword, 'WHERE') ? ExpressionParser.parse(statement) : Bool.new(true)
-      Select.new(select_list:, table:, where:)
+      order = parse_select_order
+      Select.new(select_list:, table:, where:, order:)
     end
 
     def parse_select_list
@@ -110,6 +111,15 @@ module RgSql
       end
 
       values
+    end
+
+    def parse_select_order
+      return unless statement.consume(:keyword, 'ORDER')
+
+      statement.consume!(:keyword, 'BY')
+      expression = ExpressionParser.parse(statement)
+      direction = statement.consume(:keyword, 'ASC') || statement.consume(:keyword, 'DESC') || 'ASC'
+      Order.new(expression, direction == 'ASC')
     end
 
     def parse_select_list_item_name
