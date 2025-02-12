@@ -30,32 +30,51 @@ module RgSql
     end
 
     def run
-      rows = @table.rows
+      load_rows
+      filter_rows
+      evaluate_select_list
+      sort_rows
 
-      rows = rows.select do |row|
-        evaluate(select.where, row) == Bool.new(true)
-      end
-
-      rows.each do |row|
-        select.select_list.each do |item|
-          result = evaluate(item.expression, row)
-          row << result
-        end
-      end
-
-      if select.order
-        rows = rows.sort do |row_a, row_b|
-          comparison_value(row_a, row_b)
-        end
-      end
-
-      output_rows = rows.map { |row| metadata.get_select_list(row).map(&:value) }
-
-      column_names = select.select_list.map(&:name)
-      { status: 'ok', rows: output_rows, column_names: }
+      {
+        status: 'ok',
+        rows: output_rows,
+        column_names: select.select_list.map(&:name)
+      }
     end
 
     private
+
+    def load_rows
+      @rows = @table.rows
+    end
+
+    def filter_rows
+      @rows = @rows.select do |row|
+        evaluate(select.where, row) == Bool.new(true)
+      end
+    end
+
+    def evaluate_select_list
+      @rows.each do |row|
+        select.select_list.each do |item|
+          row << evaluate(item.expression, row)
+        end
+      end
+    end
+
+    def sort_rows
+      return unless select.order
+
+      @rows = @rows.sort do |row_a, row_b|
+        comparison_value(row_a, row_b)
+      end
+    end
+
+    def output_rows
+      @rows.map do |row|
+        metadata.get_select_list(row).map(&:value)
+      end
+    end
 
     def comparison_value(row_a, row_b)
       value_a = evaluate(select.order.expression, row_a)
