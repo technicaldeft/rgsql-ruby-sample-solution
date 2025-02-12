@@ -1,5 +1,9 @@
 module RgSql
   class RowMetadata
+    def self.empty
+      new(Table.empty)
+    end
+
     def initialize(table)
       @table = table
       @select_list_offset = table.column_definitions.size

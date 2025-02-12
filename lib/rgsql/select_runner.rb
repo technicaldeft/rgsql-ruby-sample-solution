@@ -10,7 +10,7 @@ module RgSql
       @table = if select.table
                  database.get_table(select.table)
                else
-                 Table.new(nil, {}, [[]])
+                 Table.empty
                end
 
       @metadata = RowMetadata.new(@table)

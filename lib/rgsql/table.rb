@@ -2,6 +2,10 @@ module RgSql
   class Table
     attr_reader :name, :column_definitions, :rows
 
+    def self.empty
+      new(nil, {}, [[]])
+    end
+
     def initialize(name, column_definitions, rows = [])
       @name = name
       @column_definitions = column_definitions
