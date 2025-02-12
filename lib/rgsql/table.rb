@@ -20,18 +20,8 @@ module RgSql
       column_names.index(name)
     end
 
-    def get_reference(row, name)
-      index = column_index(name)
-
-      if index
-        row[index]
-      else
-        raise("column with name #{name} not found")
-      end
-    end
-
     def column_type(name)
-      column_definitions.fetch(name) { raise ValidationError, "unknown column #{name}" }
+      column_definitions[name]
     end
 
     def validate_insert(new_rows)
