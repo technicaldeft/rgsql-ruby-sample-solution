@@ -3,7 +3,7 @@ module RgSql
     class << self
       include Nodes
 
-      def type(expression, metadata)
+      def type(expression, metadata = RowMetadata.new(Table.new(nil, {}, [[]])))
         case expression
         when Operator
           type_operator(expression, type_list(expression.operands, metadata))
