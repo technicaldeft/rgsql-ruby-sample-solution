@@ -3,29 +3,29 @@ module RgSql
     class << self
       include Nodes
 
-      def type(expression, table)
+      def type(expression, metadata)
         case expression
         when Operator
-          type_operator(expression, type_list(expression.operands, table))
+          type_operator(expression, type_list(expression.operands, metadata))
         when Function
-          type_function(expression, type_list(expression.arguments, table))
+          type_function(expression, type_list(expression.arguments, metadata))
         when Int, Bool, Null
           expression.class
         when Reference
-          table.column_type(expression.name)
+          metadata.reference_type(expression.name)
         end
       end
 
-      def evaluate(expression, row = [], table = nil)
+      def evaluate(expression, row = [], metadata = nil)
         case expression
         when Operator
-          operands = evaluate_list(expression.operands, row, table)
+          operands = evaluate_list(expression.operands, row, metadata)
           Callable.find_operator(expression.operator).call(operands)
         when Function
-          arguments = evaluate_list(expression.arguments, row, table)
+          arguments = evaluate_list(expression.arguments, row, metadata)
           Callable.find_function(expression.name).call(arguments)
         when Reference
-          table.get_reference(row, expression.name)
+          metadata.get_reference(row, expression.name)
         when Int, Bool, Null
           expression
         else
@@ -53,12 +53,12 @@ module RgSql
         function.output_type
       end
 
-      def evaluate_list(expressions, row, table)
-        expressions.map { |expression| evaluate(expression, row, table) }
+      def evaluate_list(expressions, row, metadata)
+        expressions.map { |expression| evaluate(expression, row, metadata) }
       end
 
-      def type_list(expressions, table)
-        expressions.map { |expression| type(expression, table) }
+      def type_list(expressions, metadata)
+        expressions.map { |expression| type(expression, metadata) }
       end
     end
   end

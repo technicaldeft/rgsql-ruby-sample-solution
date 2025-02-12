@@ -11,6 +11,7 @@ require 'rgsql/select_runner'
 require 'rgsql/table'
 require 'rgsql/expression_parser'
 require 'rgsql/expression'
+require 'rgsql/row_metadata'
 
 module RgSql
   class ParsingError < StandardError
