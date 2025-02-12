@@ -27,6 +27,14 @@ module RgSql
       end
 
       Expression.type(select.order.expression, metadata) if select.order
+
+      unless Types.match?(Int, Expression.type(select.limit))
+        raise ValidationError, 'limit must evaluate to the type integer'
+      end
+
+      unless Types.match?(Int, Expression.type(select.offset))
+        raise ValidationError, 'offset must evaluate to the type integer'
+      end
     end
 
     def run
@@ -34,6 +42,8 @@ module RgSql
       filter_rows
       evaluate_select_list
       sort_rows
+      apply_offset
+      apply_limit
 
       {
         status: 'ok',
@@ -68,6 +78,20 @@ module RgSql
       @rows = @rows.sort do |row_a, row_b|
         comparison_value(row_a, row_b)
       end
+    end
+
+    def apply_offset
+      evaluated_offset = Expression.evaluate(select.offset)
+      return if evaluated_offset.is_a? Null
+
+      @rows = @rows.drop(evaluated_offset.value)
+    end
+
+    def apply_limit
+      evaluated_limit = Expression.evaluate(select.limit)
+      return if evaluated_limit.is_a? Null
+
+      @rows = @rows.first(evaluated_limit.value)
     end
 
     def output_rows
