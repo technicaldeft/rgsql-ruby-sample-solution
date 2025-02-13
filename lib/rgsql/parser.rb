@@ -65,10 +65,10 @@ module RgSql
     def parse_select
       select_list = parse_select_list
       table = statement.consume!(:identifier) if statement.consume(:keyword, 'FROM')
-      where = statement.consume(:keyword, 'WHERE') ? ExpressionParser.parse(statement) : Bool.new(true)
+      where = ExpressionParser.parse(statement) if statement.consume(:keyword, 'WHERE')
       order = parse_select_order
-      limit = statement.consume(:keyword, 'LIMIT') ? ExpressionParser.parse(statement) : Null.new
-      offset = statement.consume(:keyword, 'OFFSET') ? ExpressionParser.parse(statement) : Null.new
+      limit =  ExpressionParser.parse(statement) if statement.consume(:keyword, 'LIMIT')
+      offset = ExpressionParser.parse(statement) if statement.consume(:keyword, 'OFFSET')
       Select.new(select_list:, table:, where:, order:, limit:, offset:)
     end
 

@@ -17,11 +17,11 @@ module RgSql
     end
 
     def validate
-      validate_where(select.where)
+      validate_where(select.where) if select.where
       validate_select_list(select.select_list)
       validate_order(select.order) if select.order
-      validate_limit(select.limit)
-      validate_offset(select.offset)
+      validate_limit(select.limit) if select.limit
+      validate_offset(select.offset) if select.offset
     end
 
     def run
@@ -69,11 +69,12 @@ module RgSql
 
     def build_iterator_chain
       chain = Iterators::Loader.new(@table)
-      chain = Iterators::Filter.new(chain, metadata, select.where)
+      chain = Iterators::Filter.new(chain, metadata, select.where) if select.where
       chain = Iterators::Project.new(chain, metadata, select.select_list)
       chain = Iterators::Order.new(chain, metadata, select.order) if select.order
-      chain = Iterators::Offset.new(chain, select.offset)
-      Iterators::Limit.new(chain, select.limit)
+      chain = Iterators::Offset.new(chain, select.offset) if select.offset
+      chain = Iterators::Limit.new(chain, select.limit) if select.limit
+      chain
     end
   end
 end
