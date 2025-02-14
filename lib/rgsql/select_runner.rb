@@ -43,7 +43,7 @@ module RgSql
 
     def validate_join(join)
       join_table = database.get_table(join.table_name)
-      metadata.add_table(join_table)
+      metadata.add_table(join_table, join.table_alias)
       Expression.resolve_references(join.expression, metadata)
       unless Types.match?(Nodes::Bool, Expression.type(join.expression, metadata))
         raise ValidationError, 'join clause must evaluate to a boolean'

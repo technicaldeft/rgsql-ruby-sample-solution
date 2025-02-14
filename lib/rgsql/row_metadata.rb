@@ -23,10 +23,14 @@ module RgSql
       @columns << SelectListItem.new(name, type)
     end
 
-    def add_table(table)
+    def add_table(table, table_name = table.name)
+      if @columns.any? { |column| column.is_a?(TableColumn) && column.table_name == table_name }
+        raise ValidationError, "duplicate table name #{table_name}"
+      end
+
       new_columns = table.column_definitions.map do |name, type|
-        full_name = "#{table.name}.#{name}"
-        TableColumn.new(full_name, type, table.name, name)
+        full_name = "#{table_name}.#{name}"
+        TableColumn.new(full_name, type, table_name, name)
       end
       @columns += new_columns
     end
@@ -70,7 +74,14 @@ module RgSql
     end
 
     def resolve_unqualified(name)
-      @columns.find { |column| column.is_a?(TableColumn) && column.column_name == name }
+      matching_columns = @columns.select { |column| column.is_a?(TableColumn) && column.column_name == name }
+      if matching_columns.size == 0
+        nil
+      elsif matching_columns.size > 1
+        raise ValidationError, "ambiguous column name #{name}"
+      else
+        matching_columns.first
+      end
     end
 
     def resolved_qualified(name)
