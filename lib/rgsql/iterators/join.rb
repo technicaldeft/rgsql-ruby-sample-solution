@@ -17,11 +17,19 @@ module RgSql
         while (left_row = @left_iterator.next)
           @found_rows = find_matching_rows(left_row)
 
-          return next_found_row if @found_rows.any?
+          if @found_rows.any?
+            return next_found_row
+          elsif keep_unmatched_left_rows?
+            return left_row + @right_table.padded_row
+          end
         end
       end
 
       private
+
+      def keep_unmatched_left_rows?
+        @join.type == :left
+      end
 
       def next_found_row
         @found_rows.shift
