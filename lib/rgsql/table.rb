@@ -42,11 +42,11 @@ module RgSql
       end
     end
 
-    private
-
-    def padded_row(row)
+    def padded_row(row = [])
       row + Array.new(column_definitions.size - row.size) { Nodes::Null.new }
     end
+
+    private
 
     def column_name(index)
       column_names[index]

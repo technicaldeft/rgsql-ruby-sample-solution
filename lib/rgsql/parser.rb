@@ -86,14 +86,25 @@ module RgSql
     end
 
     def parse_join
-      return unless statement.consume(:keyword, 'INNER')
+      type = parse_join_type
+      return unless type
 
-      statement.consume!(:keyword, 'JOIN')
       table_name = statement.consume!(:identifier)
       table_alias = statement.consume(:identifier) || table_name
       statement.consume!(:keyword, 'ON')
       expression = ExpressionParser.parse(statement)
-      Join.new(table_name:, table_alias:, expression:)
+      Join.new(table_name:, type:, table_alias:, expression:)
+    end
+
+    def parse_join_type
+      if statement.consume(:keyword, 'INNER')
+        statement.consume!(:keyword, 'JOIN')
+        :inner
+      elsif statement.consume(:keyword, 'LEFT')
+        statement.consume!(:keyword, 'OUTER')
+        statement.consume!(:keyword, 'JOIN')
+        :left
+      end
     end
 
     def parse_insert
