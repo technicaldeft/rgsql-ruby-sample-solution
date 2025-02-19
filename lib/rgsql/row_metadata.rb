@@ -63,6 +63,13 @@ module RgSql
       reference.resolved = resolve_select_list_item(name) || resolve_reference(reference)
     end
 
+    def row_for_unmatched_right_join(table_name)
+      first_right_row_index = @columns.find_index do |column|
+        column.is_a?(TableColumn) && column.table_name == table_name
+      end
+      Array.new(first_right_row_index) { Nodes::Null.new }
+    end
+
     private
 
     def reference_offset(reference)
