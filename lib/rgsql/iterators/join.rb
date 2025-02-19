@@ -31,11 +31,15 @@ module RgSql
       private
 
       def keep_unmatched_left_rows?
-        @join.type == :left
+        %i[left full].include?(@join.type)
       end
 
       def keep_unmatched_right_rows?
-        @join.type == :right
+        %i[right full].include?(@join.type)
+      end
+
+      def right_outer_join?
+        %i[right_outer full_outer].include?(@join.type)
       end
 
       def next_found_row
