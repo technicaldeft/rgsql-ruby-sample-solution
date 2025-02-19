@@ -104,6 +104,10 @@ module RgSql
         statement.consume!(:keyword, 'OUTER')
         statement.consume!(:keyword, 'JOIN')
         :left
+      elsif statement.consume(:keyword, 'RIGHT')
+        statement.consume!(:keyword, 'OUTER')
+        statement.consume!(:keyword, 'JOIN')
+        :right
       end
     end
 
