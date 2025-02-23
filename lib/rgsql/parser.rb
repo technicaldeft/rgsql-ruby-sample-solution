@@ -16,14 +16,11 @@ module RgSql
     def to_ast
       ast = if statement.consume(:keyword, 'SELECT')
               parse_select
-            elsif statement.consume(:keyword, 'CREATE')
-              statement.consume!(:keyword, 'TABLE')
+            elsif consume_keywords('CREATE', 'TABLE')
               parse_create_table
-            elsif statement.consume(:keyword, 'DROP')
-              statement.consume!(:keyword, 'TABLE')
+            elsif consume_keywords('DROP', 'TABLE')
               parse_drop_table
-            elsif statement.consume(:keyword, 'INSERT')
-              statement.consume!(:keyword, 'INTO')
+            elsif consume_keywords('INSERT', 'INTO')
               parse_insert
             else
               raise ParsingError, "Unexpected token #{statement.next_token}"
@@ -97,20 +94,13 @@ module RgSql
     end
 
     def parse_join_type
-      if statement.consume(:keyword, 'INNER')
-        statement.consume!(:keyword, 'JOIN')
+      if consume_keywords('INNER', 'JOIN')
         :inner
-      elsif statement.consume(:keyword, 'LEFT')
-        statement.consume!(:keyword, 'OUTER')
-        statement.consume!(:keyword, 'JOIN')
+      elsif consume_keywords('LEFT', 'OUTER', 'JOIN')
         :left
-      elsif statement.consume(:keyword, 'RIGHT')
-        statement.consume!(:keyword, 'OUTER')
-        statement.consume!(:keyword, 'JOIN')
+      elsif consume_keywords('RIGHT', 'OUTER', 'JOIN')
         :right
-      elsif statement.consume(:keyword, 'FULL')
-        statement.consume!(:keyword, 'OUTER')
-        statement.consume!(:keyword, 'JOIN')
+      elsif consume_keywords('FULL', 'OUTER', 'JOIN')
         :full
       end
     end
@@ -146,10 +136,18 @@ module RgSql
       values
     end
 
-    def parse_select_order
-      return unless statement.consume(:keyword, 'ORDER')
+    def consume_keywords(first_keyword, *following_keywords)
+      consumed = statement.consume(:keyword, first_keyword)
+      return unless consumed
 
-      statement.consume!(:keyword, 'BY')
+      following_keywords.each do |keyword|
+        statement.consume!(:keyword, keyword)
+      end
+    end
+
+    def parse_select_order
+      return unless consume_keywords('ORDER', 'BY')
+
       expression = ExpressionParser.parse(statement)
       direction = statement.consume(:keyword, 'ASC') || statement.consume(:keyword, 'DESC') || 'ASC'
       Order.new(expression, direction == 'ASC')
