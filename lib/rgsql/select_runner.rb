@@ -38,12 +38,11 @@ module RgSql
     end
 
     def run
-      load_rows
-      filter_rows
-      evaluate_select_list
-      sort_rows
-      apply_offset
-      apply_limit
+      iterator = build_iterator_chain
+      output_rows = []
+      while (row = iterator.next)
+        output_rows << metadata.get_select_list(row).map(&:value)
+      end
 
       {
         status: 'ok',
@@ -54,65 +53,13 @@ module RgSql
 
     private
 
-    def load_rows
-      @rows = @table.rows
-    end
-
-    def filter_rows
-      @rows = @rows.select do |row|
-        evaluate(select.where, row) == Bool.new(true)
-      end
-    end
-
-    def evaluate_select_list
-      @rows.each do |row|
-        select.select_list.each do |item|
-          row << evaluate(item.expression, row)
-        end
-      end
-    end
-
-    def sort_rows
-      return unless select.order
-
-      @rows = @rows.sort do |row_a, row_b|
-        comparison_value(row_a, row_b)
-      end
-    end
-
-    def apply_offset
-      evaluated_offset = Expression.evaluate(select.offset)
-      return if evaluated_offset.is_a? Null
-
-      @rows = @rows.drop(evaluated_offset.value)
-    end
-
-    def apply_limit
-      evaluated_limit = Expression.evaluate(select.limit)
-      return if evaluated_limit.is_a? Null
-
-      @rows = @rows.first(evaluated_limit.value)
-    end
-
-    def output_rows
-      @rows.map do |row|
-        metadata.get_select_list(row).map(&:value)
-      end
-    end
-
-    def comparison_value(row_a, row_b)
-      value_a = evaluate(select.order.expression, row_a)
-      value_b = evaluate(select.order.expression, row_b)
-
-      if select.order.ascending
-        value_a <=> value_b
-      else
-        value_b <=> value_a
-      end
-    end
-
-    def evaluate(expression, row)
-      Expression.evaluate(expression, row, metadata)
+    def build_iterator_chain
+      chain = Iterators::Loader.new(@table)
+      chain = Iterators::Filter.new(chain, metadata, select.where)
+      chain = Iterators::Project.new(chain, metadata, select.select_list)
+      chain = Iterators::Order.new(chain, metadata, select.order) if select.order
+      chain = Iterators::Offset.new(chain, select.offset)
+      Iterators::Limit.new(chain, select.limit)
     end
   end
 end
