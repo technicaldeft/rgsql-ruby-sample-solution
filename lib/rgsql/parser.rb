@@ -65,11 +65,12 @@ module RgSql
     def parse_select
       select_list = parse_select_list
       table = statement.consume!(:identifier) if statement.consume(:keyword, 'FROM')
+      join = parse_join
       where = ExpressionParser.parse(statement) if statement.consume(:keyword, 'WHERE')
       order = parse_select_order
       limit =  ExpressionParser.parse(statement) if statement.consume(:keyword, 'LIMIT')
       offset = ExpressionParser.parse(statement) if statement.consume(:keyword, 'OFFSET')
-      Select.new(select_list:, table:, where:, order:, limit:, offset:)
+      Select.new(select_list:, table:, where:, order:, limit:, offset:, join:)
     end
 
     def parse_select_list
@@ -82,6 +83,16 @@ module RgSql
         name = parse_select_list_item_name || reference_name || '???'
         SelectListItem.new(name:, expression:)
       end
+    end
+
+    def parse_join
+      return unless statement.consume(:keyword, 'INNER')
+
+      statement.consume!(:keyword, 'JOIN')
+      table_name = statement.consume!(:identifier)
+      statement.consume!(:keyword, 'ON')
+      expression = ExpressionParser.parse(statement)
+      Join.new(table_name:, expression:)
     end
 
     def parse_insert

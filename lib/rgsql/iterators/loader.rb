@@ -11,6 +11,10 @@ module RgSql
         @index += 1
         row
       end
+
+      def reset
+        @index = 0
+      end
     end
   end
 end
