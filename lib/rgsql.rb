@@ -13,6 +13,13 @@ require 'rgsql/expression_parser'
 require 'rgsql/expression'
 require 'rgsql/row_metadata'
 
+require 'rgsql/iterators/filter'
+require 'rgsql/iterators/limit'
+require 'rgsql/iterators/loader'
+require 'rgsql/iterators/offset'
+require 'rgsql/iterators/order'
+require 'rgsql/iterators/project'
+
 module RgSql
   class ParsingError < StandardError
   end
