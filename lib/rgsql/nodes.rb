@@ -49,8 +49,16 @@ module RgSql
     Column = Data.define(:name, :type)
     DropTable = Data.define(:table, :if_exists)
     Insert = Data.define(:table, :rows)
-    Reference = Data.define(:name)
     Operator = Data.define(:operator, :operands)
     Function = Data.define(:name, :arguments)
+
+    class Reference
+      attr_reader :name
+      attr_accessor :resolved
+
+      def initialize(name)
+        @name = name
+      end
+    end
   end
 end
