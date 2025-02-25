@@ -9,7 +9,7 @@ module RgSql
 
       def next
         while (row = @previous_iterator.next)
-          return row if Expression.evaluate(@expression, row, @metadata) == Nodes::Bool.new(true)
+          return row if @expression.evaluate(row, @metadata) == Nodes::Bool.new(true)
         end
       end
     end

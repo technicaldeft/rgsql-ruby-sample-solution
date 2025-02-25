@@ -11,6 +11,7 @@ require 'rgsql/select_runner'
 require 'rgsql/table'
 require 'rgsql/expression_parser'
 require 'rgsql/expression'
+require 'rgsql/expression_wrapper'
 require 'rgsql/row_metadata'
 
 require 'rgsql/iterators/filter'

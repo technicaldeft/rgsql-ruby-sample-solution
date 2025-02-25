@@ -18,7 +18,7 @@ module RgSql
       def build_grouping_hash
         @grouping_hash = {}
         while (row = @previous_iterator.next)
-          evaluated_grouping = Expression.evaluate(@grouping, row, @metadata)
+          evaluated_grouping = @grouping.evaluate(row, @metadata)
           @grouping_hash[evaluated_grouping.value] ||= [evaluated_grouping]
         end
       end

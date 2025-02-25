@@ -3,7 +3,7 @@ module RgSql
     class Limit
       def initialize(previous_iterator, limit_expression)
         @previous_iterator = previous_iterator
-        @limit = Expression.evaluate(limit_expression).value
+        @limit = limit_expression.evaluate.value
       end
 
       def next
