@@ -6,18 +6,29 @@ module RgSql
     SelectListItem = Data.define(:name, :type)
 
     def self.empty
-      new(Table.empty)
+      new([])
     end
 
-    def initialize(table)
-      @columns = table.column_definitions.map do |name, type|
-        full_name = "#{table.name}.#{name}"
-        TableColumn.new(full_name, type, table.name, name)
-      end
+    def self.from_table(table)
+      metadata = new([])
+      metadata.add_table(table)
+      metadata
+    end
+
+    def initialize(columns)
+      @columns = columns
     end
 
     def add_select_list_item(name, type)
       @columns << SelectListItem.new(name, type)
+    end
+
+    def add_table(table)
+      new_columns = table.column_definitions.map do |name, type|
+        full_name = "#{table.name}.#{name}"
+        TableColumn.new(full_name, type, table.name, name)
+      end
+      @columns += new_columns
     end
 
     def get_reference(row, reference)
