@@ -17,24 +17,11 @@ module RgSql
     end
 
     def validate
-      unless Types.match?(Bool, Expression.type(select.where, metadata))
-        raise ValidationError, 'where clause must evaluate to a boolean'
-      end
-
-      select.select_list.each do |item|
-        type = Expression.type(item.expression, metadata)
-        metadata.add_select_list_item(item.name, type)
-      end
-
-      Expression.type(select.order.expression, metadata) if select.order
-
-      unless Types.match?(Int, Expression.type(select.limit))
-        raise ValidationError, 'limit must evaluate to the type integer'
-      end
-
-      unless Types.match?(Int, Expression.type(select.offset))
-        raise ValidationError, 'offset must evaluate to the type integer'
-      end
+      validate_where(select.where)
+      validate_select_list(select.select_list)
+      validate_order(select.order) if select.order
+      validate_limit(select.limit)
+      validate_offset(select.offset)
     end
 
     def run
@@ -52,6 +39,33 @@ module RgSql
     end
 
     private
+
+    def validate_where(where)
+      unless Types.match?(Bool, Expression.type(where, metadata))
+        raise ValidationError, 'where clause must evaluate to a boolean'
+      end
+    end
+
+    def validate_select_list(select_list)
+      select_list.each do |item|
+        type = Expression.type(item.expression, metadata)
+        metadata.add_select_list_item(item.name, type)
+      end
+    end
+
+    def validate_order(order)
+      Expression.type(order.expression, metadata)
+    end
+
+    def validate_limit(limit)
+      raise ValidationError, 'limit must evaluate to the type integer' unless Types.match?(Int, Expression.type(limit))
+    end
+
+    def validate_offset(offset)
+      unless Types.match?(Int, Expression.type(offset))
+        raise ValidationError, 'offset must evaluate to the type integer'
+      end
+    end
 
     def build_iterator_chain
       chain = Iterators::Loader.new(@table)
