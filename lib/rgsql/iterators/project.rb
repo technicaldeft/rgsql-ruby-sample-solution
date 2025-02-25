@@ -12,7 +12,7 @@ module RgSql
         return nil unless row
 
         @select_list.each do |item|
-          row << Expression.evaluate(item.expression, row, @metadata)
+          row << item.expression.evaluate(row, @metadata)
         end
 
         row

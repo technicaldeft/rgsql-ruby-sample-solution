@@ -63,11 +63,11 @@ module RgSql
       select_list = parse_select_list
       table = statement.consume!(:identifier) if statement.consume(:keyword, 'FROM')
       join = parse_join
-      where = ExpressionParser.parse(statement) if statement.consume(:keyword, 'WHERE')
-      grouping = ExpressionParser.parse(statement) if consume_keywords('GROUP', 'BY')
+      where = parse_expression if statement.consume(:keyword, 'WHERE')
+      grouping = parse_expression if consume_keywords('GROUP', 'BY')
       order = parse_select_order
-      limit =  ExpressionParser.parse(statement) if statement.consume(:keyword, 'LIMIT')
-      offset = ExpressionParser.parse(statement) if statement.consume(:keyword, 'OFFSET')
+      limit =  parse_expression if statement.consume(:keyword, 'LIMIT')
+      offset = parse_expression if statement.consume(:keyword, 'OFFSET')
       Select.new(select_list:, table:, where:, grouping:, order:, limit:, offset:, join:)
     end
 
@@ -75,10 +75,9 @@ module RgSql
       return [] if statement.consume(:symbol, ';')
 
       parse_list do
-        expression = ExpressionParser.parse(statement)
+        expression = parse_expression
 
-        reference_name = expression.is_a?(Reference) && expression.name
-        name = parse_select_list_item_name || reference_name || '???'
+        name = parse_select_list_item_name || expression.name || '???'
         SelectListItem.new(name:, expression:)
       end
     end
@@ -90,7 +89,7 @@ module RgSql
       table_name = statement.consume!(:identifier)
       table_alias = statement.consume(:identifier) || table_name
       statement.consume!(:keyword, 'ON')
-      expression = ExpressionParser.parse(statement)
+      expression = parse_expression
       Join.new(table_name:, type:, table_alias:, expression:)
     end
 
@@ -120,7 +119,7 @@ module RgSql
     def parse_insert_row
       statement.consume!(:symbol, '(')
       row = parse_list do
-        ExpressionParser.parse(statement)
+        parse_expression
       end
       statement.consume!(:symbol, ')')
       row
@@ -149,13 +148,18 @@ module RgSql
     def parse_select_order
       return unless consume_keywords('ORDER', 'BY')
 
-      expression = ExpressionParser.parse(statement)
+      expression = parse_expression
       direction = statement.consume(:keyword, 'ASC') || statement.consume(:keyword, 'DESC') || 'ASC'
       Order.new(expression, direction == 'ASC')
     end
 
     def parse_select_list_item_name
       statement.consume!(:identifier) if statement.consume(:keyword, 'AS')
+    end
+
+    def parse_expression
+      expression = ExpressionParser.parse(statement)
+      ExpressionWrapper.new(expression)
     end
   end
 end

@@ -57,7 +57,7 @@ module RgSql
       def find_matching_rows(left_row)
         @right_table.rows.filter_map.with_index do |right_row, index|
           row = left_row + right_row
-          result = Expression.evaluate(@join.expression, row, @metadata)
+          result = @join.expression.evaluate(row, @metadata)
           if result == Nodes::Bool.new(true)
             @matched_right_rows.add(index)
             row
