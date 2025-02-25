@@ -13,7 +13,7 @@ module RgSql
     OPERATOR_SYMBOLS = %w[+ - * / = <> <= >= < >].freeze
     NULL = 'NULL'.freeze
 
-    WORD_PATTERN = /\A[a-z_][a-z_\d]*/i
+    WORD_PATTERN = /\A[a-z_][a-z_\d\.]*/i
     INTEGER_PATTERN = /\A-?\d+/
     SYMBOLS_PATTERN = /\A\(|\)|,|;/
     OPERATOR_SYMBOLS_PATTERN = /\A(#{union(OPERATOR_SYMBOLS)})/i

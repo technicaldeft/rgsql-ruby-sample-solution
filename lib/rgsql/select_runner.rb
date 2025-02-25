@@ -41,6 +41,7 @@ module RgSql
     private
 
     def validate_where(where)
+      Expression.resolve_references(where, metadata)
       unless Types.match?(Bool, Expression.type(where, metadata))
         raise ValidationError, 'where clause must evaluate to a boolean'
       end
@@ -48,20 +49,29 @@ module RgSql
 
     def validate_select_list(select_list)
       select_list.each do |item|
+        Expression.resolve_references(item.expression, metadata)
         type = Expression.type(item.expression, metadata)
         metadata.add_select_list_item(item.name, type)
       end
     end
 
     def validate_order(order)
+      if order.expression.is_a?(Nodes::Reference)
+        metadata.resolve_order_by_reference(order.expression)
+      else
+        Expression.resolve_references(order.expression, metadata)
+      end
+
       Expression.type(order.expression, metadata)
     end
 
     def validate_limit(limit)
+      Expression.resolve_references(limit)
       raise ValidationError, 'limit must evaluate to the type integer' unless Types.match?(Int, Expression.type(limit))
     end
 
     def validate_offset(offset)
+      Expression.resolve_references(offset)
       unless Types.match?(Int, Expression.type(offset))
         raise ValidationError, 'offset must evaluate to the type integer'
       end
