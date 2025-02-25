@@ -45,52 +45,45 @@ module RgSql
     def validate_join(join)
       join_table = database.get_table(join.table_name)
       metadata.add_table(join_table, join.table_alias)
-      Expression.resolve_references(join.expression, metadata)
-      unless Types.match?(Nodes::Bool, Expression.type(join.expression, metadata))
+      join.expression.resolve_references(metadata)
+      unless Types.match?(Nodes::Bool, join.expression.type(metadata))
         raise ValidationError, 'join clause must evaluate to a boolean'
       end
     end
 
     def validate_where(where)
-      Expression.resolve_references(where, metadata)
-      unless Types.match?(Bool, Expression.type(where, metadata))
-        raise ValidationError, 'where clause must evaluate to a boolean'
-      end
+      where.resolve_references(metadata)
+      raise ValidationError, 'where clause must evaluate to a boolean' unless Types.match?(Bool, where.type(metadata))
     end
 
     def validate_grouping(grouping)
-      Expression.resolve_references(grouping, metadata)
+      grouping.resolve_references(metadata)
+
       metadata.add_grouping(grouping)
     end
 
     def validate_select_list(select_list)
       select_list.each do |item|
-        Expression.resolve_references(item.expression, metadata)
-        type = Expression.type(item.expression, metadata)
+        item.expression.resolve_references(metadata)
+        type = item.expression.type(metadata)
         metadata.add_select_list_item(item.name, type)
       end
     end
 
     def validate_order(order)
-      if order.expression.is_a?(Nodes::Reference)
-        metadata.resolve_order_by_reference(order.expression)
-      else
-        Expression.resolve_references(order.expression, metadata)
-      end
+      order.expression.resolve_order_by_reference(metadata) || order.expression.resolve_references(metadata)
 
-      Expression.type(order.expression, metadata)
+      order.expression.type(metadata)
     end
 
     def validate_limit(limit)
-      Expression.resolve_references(limit)
-      raise ValidationError, 'limit must evaluate to the type integer' unless Types.match?(Int, Expression.type(limit))
+      limit.resolve_references
+      raise ValidationError, 'limit must evaluate to the type integer' unless Types.match?(Int, limit.type)
     end
 
     def validate_offset(offset)
-      Expression.resolve_references(offset)
-      unless Types.match?(Int, Expression.type(offset))
-        raise ValidationError, 'offset must evaluate to the type integer'
-      end
+      offset.resolve_references
+      raise ValidationError, 'offset must evaluate to the type integer' unless Types.match?(Int, offset.type)
     end
 
     def build_iterator_chain
