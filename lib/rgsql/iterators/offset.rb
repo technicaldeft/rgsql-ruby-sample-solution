@@ -3,7 +3,7 @@ module RgSql
     class Offset
       def initialize(previous_iterator, offset_expression)
         @previous_iterator = previous_iterator
-        @offset = Expression.evaluate(offset_expression).value
+        @offset = offset_expression.evaluate.value
       end
 
       def next

@@ -27,8 +27,8 @@ module RgSql
       end
 
       def comparison_value(row_a, row_b)
-        value_a = Expression.evaluate(@order.expression, row_a, @metadata)
-        value_b = Expression.evaluate(@order.expression, row_b, @metadata)
+        value_a = @order.expression.evaluate(row_a, @metadata)
+        value_b = @order.expression.evaluate(row_b, @metadata)
 
         if @order.ascending
           value_a <=> value_b
