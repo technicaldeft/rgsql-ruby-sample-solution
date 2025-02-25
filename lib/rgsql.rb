@@ -14,6 +14,7 @@ require 'rgsql/expression'
 require 'rgsql/row_metadata'
 
 require 'rgsql/iterators/filter'
+require 'rgsql/iterators/join'
 require 'rgsql/iterators/limit'
 require 'rgsql/iterators/loader'
 require 'rgsql/iterators/offset'
