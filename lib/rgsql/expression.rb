@@ -3,6 +3,17 @@ module RgSql
     class << self
       include Nodes
 
+      def resolve_references(expression, metadata = RowMetadata.empty)
+        case expression
+        when Operator
+          expression.operands.each { |operand| resolve_references(operand, metadata) }
+        when Function
+          expression.arguments.each { |argument| resolve_references(argument, metadata) }
+        when Reference
+          metadata.resolve_reference(expression)
+        end
+      end
+
       def type(expression, metadata = RowMetadata.empty)
         case expression
         when Operator
@@ -12,7 +23,7 @@ module RgSql
         when Int, Bool, Null
           expression.class
         when Reference
-          metadata.reference_type(expression.name)
+          expression.resolved.type
         end
       end
 
@@ -25,7 +36,7 @@ module RgSql
           arguments = evaluate_list(expression.arguments, row, metadata)
           Callable.find_function(expression.name).call(arguments)
         when Reference
-          metadata.get_reference(row, expression.name)
+          metadata.get_reference(row, expression)
         when Int, Bool, Null
           expression
         else
