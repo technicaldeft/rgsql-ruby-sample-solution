@@ -13,10 +13,11 @@ module RgSql
                  Table.empty
                end
 
-      @metadata = RowMetadata.new(@table)
+      @metadata = RowMetadata.from_table(@table)
     end
 
     def validate
+      validate_join(select.join) if select.join
       validate_where(select.where) if select.where
       validate_select_list(select.select_list)
       validate_order(select.order) if select.order
@@ -39,6 +40,15 @@ module RgSql
     end
 
     private
+
+    def validate_join(join)
+      join_table = database.get_table(join.table_name)
+      metadata.add_table(join_table)
+      Expression.resolve_references(join.expression, metadata)
+      unless Types.match?(Nodes::Bool, Expression.type(join.expression, metadata))
+        raise ValidationError, 'join clause must evaluate to a boolean'
+      end
+    end
 
     def validate_where(where)
       Expression.resolve_references(where, metadata)
@@ -79,6 +89,7 @@ module RgSql
 
     def build_iterator_chain
       chain = Iterators::Loader.new(@table)
+      chain = Iterators::Join.new(chain, metadata, select.join, database) if select.join
       chain = Iterators::Filter.new(chain, metadata, select.where) if select.where
       chain = Iterators::Project.new(chain, metadata, select.select_list)
       chain = Iterators::Order.new(chain, metadata, select.order) if select.order
