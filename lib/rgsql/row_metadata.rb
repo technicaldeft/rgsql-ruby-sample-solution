@@ -4,6 +4,7 @@ module RgSql
 
     TableColumn = Data.define(:full_name, :type, :table_name, :column_name)
     SelectListItem = Data.define(:name, :type)
+    StoredExpression = Data.define(:expression, :type)
 
     def self.empty
       new([])
@@ -23,10 +24,10 @@ module RgSql
       @before_grouping || self
     end
 
-    def add_grouping(grouping)
+    def add_grouping(grouping, type)
       @before_grouping = RowMetadata.new(@columns)
 
-      @columns = [grouping.resolved] || raise('expecting a reference')
+      @columns = [StoredExpression.new(grouping.contents, type)]
     end
 
     def add_select_list_item(name, type)
@@ -48,6 +49,13 @@ module RgSql
     def get_reference(row, reference)
       offset = reference_offset(reference)
       row[offset]
+    end
+
+    def reference_type(reference)
+      offset = reference_offset(reference)
+      raise ValidationError, "unknown column #{reference.name}, may not be grouped" unless offset
+
+      @columns[offset].type
     end
 
     def get_select_list(row)
@@ -78,6 +86,10 @@ module RgSql
         column.is_a?(TableColumn) && column.table_name == table_name
       end
       Array.new(first_right_row_index) { Nodes::Null.new }
+    end
+
+    def resolve_stored_expression(expression)
+      @columns.find { |column| column.is_a?(StoredExpression) && column.expression == expression }
     end
 
     private
