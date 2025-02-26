@@ -58,14 +58,17 @@ module RgSql
 
     def validate_grouping(grouping)
       grouping.resolve_references(metadata)
+      type = grouping.type(metadata)
 
-      metadata.add_grouping(grouping)
+      metadata.add_grouping(grouping, type)
     end
 
     def validate_select_list(select_list)
       select_list.each do |item|
-        item.expression.resolve_references(metadata)
-        type = item.expression.type(metadata)
+        expression = item.expression
+        expression.resolve_references(metadata.before_grouping)
+        expression.replace_stored_expressions(metadata)
+        type = expression.type(metadata)
         metadata.add_select_list_item(item.name, type)
       end
     end
