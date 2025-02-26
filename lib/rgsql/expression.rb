@@ -14,6 +14,18 @@ module RgSql
         end
       end
 
+      def replace_stored_expressions(expression, metadata)
+        if (stored_expression = metadata.resolve_stored_expression(expression))
+          Reference.for_stored_expression(stored_expression)
+        elsif expression.is_a?(Operator)
+          Operator.new(expression.operator, replace_list(expression.operands, metadata))
+        elsif expression.is_a?(Function)
+          Function.new(expression.name, replace_list(expression.arguments, metadata))
+        else
+          expression
+        end
+      end
+
       def type(expression, metadata = RowMetadata.empty)
         case expression
         when Operator
@@ -23,7 +35,7 @@ module RgSql
         when Int, Bool, Null
           expression.class
         when Reference
-          expression.resolved.type
+          metadata.reference_type(expression)
         end
       end
 
@@ -70,6 +82,10 @@ module RgSql
 
       def type_list(expressions, metadata)
         expressions.map { |expression| type(expression, metadata) }
+      end
+
+      def replace_list(expressions, metadata)
+        expressions.map { |expression| replace_stored_expressions(expression, metadata) }
       end
     end
   end
