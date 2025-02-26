@@ -57,8 +57,18 @@ module RgSql
       attr_reader :name
       attr_accessor :resolved
 
+      def self.for_stored_expression(expression)
+        reference = new('[stored_expression]')
+        reference.resolved = expression
+        reference
+      end
+
       def initialize(name)
         @name = name
+      end
+
+      def ==(other)
+        other.is_a?(Reference) && resolved && other.resolved == resolved
       end
     end
   end
