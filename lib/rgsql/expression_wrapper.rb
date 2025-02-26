@@ -6,6 +6,10 @@ module RgSql
       @expression = expression
     end
 
+    def contents
+      expression
+    end
+
     def ==(other)
       expression == other
     end
@@ -24,6 +28,10 @@ module RgSql
 
     def resolve_order_by_reference(metadata)
       metadata.resolve_order_by_reference(expression) if reference?
+    end
+
+    def replace_stored_expressions(metadata)
+      @expression = Expression.replace_stored_expressions(expression, metadata)
     end
 
     def name
