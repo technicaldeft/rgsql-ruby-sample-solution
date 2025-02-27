@@ -34,6 +34,10 @@ module RgSql
       @expression = Expression.replace_stored_expressions(expression, metadata)
     end
 
+    def aggregate_parts
+      Expression.aggregate_parts(expression)
+    end
+
     def name
       expression.name if reference?
     end
