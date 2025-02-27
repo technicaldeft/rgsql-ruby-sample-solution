@@ -108,7 +108,7 @@ module RgSql
 
     def store_aggregate_parts(expression)
       expression.aggregate_parts.each do |aggregate_expression|
-        type = Expression.type(aggregate_expression, metadata.before_grouping)
+        type = Expression.type(aggregate_expression, metadata)
         metadata.store_aggregate_expression(aggregate_expression, type)
       end
     end

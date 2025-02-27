@@ -21,6 +21,10 @@ module RgSql
       @columns = columns
     end
 
+    def grouped?
+      @before_grouping
+    end
+
     def before_grouping
       @before_grouping || self
     end
