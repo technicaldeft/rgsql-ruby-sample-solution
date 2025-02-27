@@ -37,7 +37,7 @@ module RgSql
         when Operator
           type_operator(expression, type_list(expression.operands, metadata))
         when Function
-          type_function(expression, type_list(expression.arguments, metadata))
+          type_function(expression, metadata)
         when Int, Bool, Null
           expression.class
         when Reference
@@ -89,8 +89,16 @@ module RgSql
         operator.output_type
       end
 
-      def type_function(expression, argument_types)
+      def type_function(expression, metadata)
         function = Callable.find_function(expression.name)
+
+        if function.aggregate? && !metadata.grouped?
+          raise ValidationError, 'Cannot use aggregate function within another aggregate function'
+        end
+
+        metadata = metadata.before_grouping if function.aggregate?
+        argument_types = type_list(expression.arguments, metadata)
+
         unless function.accepts_types?(argument_types)
           raise(ValidationError, "Function #{expression.name} does not accept types #{argument_types}")
         end
