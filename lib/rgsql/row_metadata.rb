@@ -29,10 +29,17 @@ module RgSql
       @before_grouping || self
     end
 
-    def add_grouping(grouping, type)
-      @before_grouping = RowMetadata.new(@columns)
+    def ensure_grouped
+      return if grouped?
 
-      @columns = [StoredExpression.new(grouping.contents, type)]
+      @before_grouping = RowMetadata.new(@columns)
+      @columns = []
+    end
+
+    def add_grouping(grouping, type)
+      ensure_grouped
+
+      @columns << StoredExpression.new(grouping.contents, type)
     end
 
     def store_aggregate_expression(expression, type)

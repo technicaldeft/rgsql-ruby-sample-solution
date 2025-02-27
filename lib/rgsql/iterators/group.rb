@@ -21,6 +21,8 @@ module RgSql
         while (row = @previous_iterator.next)
           add_grouped_row(row)
         end
+
+        add_grouped_row([]) if @grouping_hash.empty? && @grouping.nil?
       end
 
       def add_grouped_row(row)
@@ -36,8 +38,12 @@ module RgSql
       end
 
       def evaluate_grouping(row)
-        evaluated = @grouping.evaluate(row, @ungrouped_metadata)
-        [evaluated.value, [evaluated]]
+        if @grouping
+          evaluated = @grouping.evaluate(row, @ungrouped_metadata)
+          [evaluated.value, [evaluated]]
+        else
+          [nil, []]
+        end
       end
 
       def partially_apply_aggregates(row, grouped_row)

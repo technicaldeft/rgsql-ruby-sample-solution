@@ -98,7 +98,7 @@ module RgSql
       chain = Iterators::Loader.new(@table)
       chain = Iterators::Join.new(chain, metadata.before_grouping, select.join, database) if select.join
       chain = Iterators::Filter.new(chain, metadata.before_grouping, select.where) if select.where
-      chain = Iterators::Group.new(chain, metadata, select.grouping) if select.grouping
+      chain = Iterators::Group.new(chain, metadata, select.grouping) if metadata.grouped?
       chain = Iterators::Project.new(chain, metadata, select.select_list)
       chain = Iterators::Order.new(chain, metadata, select.order) if select.order
       chain = Iterators::Offset.new(chain, select.offset) if select.offset
@@ -107,7 +107,12 @@ module RgSql
     end
 
     def store_aggregate_parts(expression)
-      expression.aggregate_parts.each do |aggregate_expression|
+      aggregate_expressions = expression.aggregate_parts
+      return if aggregate_expressions.empty?
+
+      metadata.ensure_grouped
+
+      aggregate_expressions.each do |aggregate_expression|
         type = Expression.type(aggregate_expression, metadata)
         metadata.store_aggregate_expression(aggregate_expression, type)
       end
