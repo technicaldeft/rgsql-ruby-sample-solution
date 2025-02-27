@@ -40,7 +40,7 @@ module RgSql
     }
 
     PARTIAL_SUM = lambda { |state, op1|
-      if op1.is_a?(Null)
+      if op1.is_a?(Null) || op1.nil?
         state || Null.new
       else
         previous = state&.value || 0
