@@ -26,6 +26,12 @@ module RgSql
         end
       end
 
+      def partially_evaluate(aggregate_expression, row, state, metadata)
+        arguments = evaluate_list(aggregate_expression.arguments, row, metadata.before_grouping)
+
+        Callable.find_function(aggregate_expression.name).call_aggregate(state, *arguments)
+      end
+
       def type(expression, metadata = RowMetadata.empty)
         case expression
         when Operator
@@ -53,6 +59,22 @@ module RgSql
           expression
         else
           raise "unknown expression #{expression.inspect} of type #{expression.class}"
+        end
+      end
+
+      def aggregate_parts(expression)
+        case expression
+        when Function
+          function = Callable.find_function(expression.name)
+          if function.aggregate?
+            [expression]
+          else
+            expression.arguments.flat_map { |argument| aggregate_parts(argument) }
+          end
+        when Operator
+          expression.operands.flat_map { |operand| aggregate_parts(operand) }
+        else
+          []
         end
       end
 

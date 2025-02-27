@@ -30,6 +30,24 @@ module RgSql
       end
     }
 
+    PARTIAL_COUNT = lambda { |state, op1|
+      if op1.is_a?(Null) || op1.nil?
+        state || Int.new(0)
+      else
+        previous = state&.value || 0
+        Int.new(previous + 1)
+      end
+    }
+
+    PARTIAL_SUM = lambda { |state, op1|
+      if op1.is_a?(Null)
+        state || Null.new
+      else
+        previous = state&.value || 0
+        Int.new(previous + op1.value)
+      end
+    }
+
     OPERATORS = [
       new('+', [[Int, Int]], Int,        ->(op1, op2) { Int.new(op1.value + op2.value) },       true),
       new('-', [[Int, Int], [Int]], Int, MINUS_BODY,                                            true),
@@ -49,10 +67,17 @@ module RgSql
       new('<>', [[Bool, Bool], [Int, Int]], Bool, ->(op1, op2) { Bool.new(op1.value != op2.value) }, true)
     ].freeze
 
-    FUNCTIONS = [
+    NON_AGGREGATE_FUNCTIONS = [
       new('ABS', [[Int]],      Int, ->(arg)        { Int.new(arg.value.abs) }, true),
       new('MOD', [[Int, Int]], Int, ->(arg1, arg2) { Int.new(arg1.value % arg2.value) }, true)
     ].freeze
+
+    AGGREGATE_FUNCTIONS = [
+      new('COUNT', [[Int], [Bool]], Int, PARTIAL_COUNT, false),
+      new('SUM', [[Int]], Int, PARTIAL_SUM, false)
+    ].freeze
+
+    FUNCTIONS = NON_AGGREGATE_FUNCTIONS + AGGREGATE_FUNCTIONS
 
     def self.find_operator(name)
       operator = OPERATORS.find { |callable| callable.name == name }
@@ -64,12 +89,20 @@ module RgSql
       function || raise(ValidationError, "Cannot find function #{name}")
     end
 
+    def aggregate?
+      AGGREGATE_FUNCTIONS.include?(self)
+    end
+
     def call(inputs)
       if propagate_null? && inputs.any? { |input| input.is_a?(Null) }
         Null.new
       else
         body.call(*inputs)
       end
+    end
+
+    def call_aggregate(state, input)
+      body.call(state, input)
     end
 
     def accepts_types?(types)

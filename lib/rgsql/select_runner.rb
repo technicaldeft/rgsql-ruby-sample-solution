@@ -67,6 +67,11 @@ module RgSql
       select_list.each do |item|
         expression = item.expression
         expression.resolve_references(metadata.before_grouping)
+        store_aggregate_parts(expression)
+      end
+
+      select_list.each do |item|
+        expression = item.expression
         expression.replace_stored_expressions(metadata)
         type = expression.type(metadata)
         metadata.add_select_list_item(item.name, type)
@@ -93,12 +98,19 @@ module RgSql
       chain = Iterators::Loader.new(@table)
       chain = Iterators::Join.new(chain, metadata.before_grouping, select.join, database) if select.join
       chain = Iterators::Filter.new(chain, metadata.before_grouping, select.where) if select.where
-      chain = Iterators::Group.new(chain, metadata.before_grouping, select.grouping) if select.grouping
+      chain = Iterators::Group.new(chain, metadata, select.grouping) if select.grouping
       chain = Iterators::Project.new(chain, metadata, select.select_list)
       chain = Iterators::Order.new(chain, metadata, select.order) if select.order
       chain = Iterators::Offset.new(chain, select.offset) if select.offset
       chain = Iterators::Limit.new(chain, select.limit) if select.limit
       chain
+    end
+
+    def store_aggregate_parts(expression)
+      expression.aggregate_parts.each do |aggregate_expression|
+        type = Expression.type(aggregate_expression, metadata.before_grouping)
+        metadata.store_aggregate_expression(aggregate_expression, type)
+      end
     end
   end
 end

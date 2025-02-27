@@ -5,6 +5,7 @@ module RgSql
     TableColumn = Data.define(:full_name, :type, :table_name, :column_name)
     SelectListItem = Data.define(:name, :type)
     StoredExpression = Data.define(:expression, :type)
+    StoredAggregateExpression = Class.new(StoredExpression)
 
     def self.empty
       new([])
@@ -28,6 +29,18 @@ module RgSql
       @before_grouping = RowMetadata.new(@columns)
 
       @columns = [StoredExpression.new(grouping.contents, type)]
+    end
+
+    def store_aggregate_expression(expression, type)
+      @columns << StoredAggregateExpression.new(expression, type)
+    end
+
+    def update_each_aggregate_state(row)
+      @columns.each.with_index do |column, offset|
+        next unless column.is_a?(StoredAggregateExpression)
+
+        row[offset] = yield(column.expression, row[offset])
+      end
     end
 
     def add_select_list_item(name, type)
