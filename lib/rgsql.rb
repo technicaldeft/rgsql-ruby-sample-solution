@@ -20,6 +20,7 @@ require 'rgsql/iterators/loader'
 require 'rgsql/iterators/offset'
 require 'rgsql/iterators/order'
 require 'rgsql/iterators/project'
+require 'rgsql/iterators/group'
 
 module RgSql
   class ParsingError < StandardError
