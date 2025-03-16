@@ -42,7 +42,7 @@ module RgSql
       end
     end
 
-    Select = Data.define(:select_list, :table, :where, :order, :limit, :offset, :join)
+    Select = Data.define(:select_list, :table, :where, :grouping, :order, :limit, :offset, :join)
     SelectListItem = Data.define(:name, :expression)
     Join = Data.define(:table_name, :type, :table_alias, :expression)
     Order = Data.define(:expression, :ascending)

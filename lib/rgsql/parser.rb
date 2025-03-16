@@ -64,10 +64,11 @@ module RgSql
       table = statement.consume!(:identifier) if statement.consume(:keyword, 'FROM')
       join = parse_join
       where = ExpressionParser.parse(statement) if statement.consume(:keyword, 'WHERE')
+      grouping = ExpressionParser.parse(statement) if consume_keywords('GROUP', 'BY')
       order = parse_select_order
       limit =  ExpressionParser.parse(statement) if statement.consume(:keyword, 'LIMIT')
       offset = ExpressionParser.parse(statement) if statement.consume(:keyword, 'OFFSET')
-      Select.new(select_list:, table:, where:, order:, limit:, offset:, join:)
+      Select.new(select_list:, table:, where:, grouping:, order:, limit:, offset:, join:)
     end
 
     def parse_select_list
