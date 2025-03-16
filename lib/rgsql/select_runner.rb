@@ -19,6 +19,7 @@ module RgSql
     def validate
       validate_join(select.join) if select.join
       validate_where(select.where) if select.where
+      validate_grouping(select.grouping) if select.grouping
       validate_select_list(select.select_list)
       validate_order(select.order) if select.order
       validate_limit(select.limit) if select.limit
@@ -57,6 +58,11 @@ module RgSql
       end
     end
 
+    def validate_grouping(grouping)
+      Expression.resolve_references(grouping, metadata)
+      metadata.add_grouping(grouping)
+    end
+
     def validate_select_list(select_list)
       select_list.each do |item|
         Expression.resolve_references(item.expression, metadata)
@@ -89,8 +95,9 @@ module RgSql
 
     def build_iterator_chain
       chain = Iterators::Loader.new(@table)
-      chain = Iterators::Join.new(chain, metadata, select.join, database) if select.join
-      chain = Iterators::Filter.new(chain, metadata, select.where) if select.where
+      chain = Iterators::Join.new(chain, metadata.before_grouping, select.join, database) if select.join
+      chain = Iterators::Filter.new(chain, metadata.before_grouping, select.where) if select.where
+      chain = Iterators::Group.new(chain, metadata.before_grouping, select.grouping) if select.grouping
       chain = Iterators::Project.new(chain, metadata, select.select_list)
       chain = Iterators::Order.new(chain, metadata, select.order) if select.order
       chain = Iterators::Offset.new(chain, select.offset) if select.offset
