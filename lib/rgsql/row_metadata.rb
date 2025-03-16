@@ -19,6 +19,20 @@ module RgSql
       @columns = columns
     end
 
+    def before_grouping
+      @before_grouping || self
+    end
+
+    def add_grouping(grouping)
+      @before_grouping = RowMetadata.new(@columns)
+
+      if grouping.is_a?(Nodes::Reference)
+        @columns = [grouping.resolved]
+      else
+        raise 'expecting a reference'
+      end
+    end
+
     def add_select_list_item(name, type)
       @columns << SelectListItem.new(name, type)
     end
