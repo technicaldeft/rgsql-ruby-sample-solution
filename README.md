@@ -1,4 +1,8 @@
-# rgSQL
+# rgSQL in Ruby
+
+The is a sample implementation for rgSQL written in Ruby.
+
+### About rgSQL
 
 <img align=right width=159 height=187 src="https://technicaldeft.com/rgsql_logo_small.png"/> rgSQL is a SQL database server that **YOU** get to build from scratch.
 
