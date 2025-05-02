@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+PYTHON_CMD=""
+
+if command -v python3 > /dev/null 2>&1; then
+  PYTHON_CMD="python3"
+elif command -v python > /dev/null 2>&1; then
+  PYTHON_CMD="python"
+else
+  printf "Python 3 can not be found. Please install Python 3.6 or later.\n"
+  exit 1
+fi
+
+# Add any compilation or linting commands after this line
+
+$PYTHON_CMD -m test_runner.main "$@"

@@ -1,0 +1,82 @@
+name: rgSQL Test Suite
+
+on: [push, pull_request]
+
+jobs:
+  rgsql_tests:
+    name: rgSQL Tests
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    # Install any dependencies needed to run your implementation here
+    # See examples at https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing
+
+    - name: Run tests
+      timeout-minutes: 5
+      run: |
+        ./run-tests
+  
+
+  postgresql_compatibility_test:
+    name: PostgreSQL compatibility test
+    if: ${{ vars.TEST_POSTGRESQL == 'true' }}
+    services:
+      postgres:
+        image: postgres:17.2
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+      
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Run tests against PostgreSQL
+      run: |
+        pip install psycopg2
+        ./run-tests -p postgresql://test_user:test_password@localhost:5432/test_db
+
+
+  test_runner_test:
+    name: Test runner test
+    if: ${{ vars.TEST_RUNNER_TEST == 'true' }}
+    strategy:
+      matrix:
+        python:
+          - version: '3.6'
+            os: ubuntu-20.04
+          - version: '3.13'
+            os: ubuntu-24.04
+      
+    runs-on: ${{ matrix.python.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python.version }}
+
+    - name: Run tests
+      run: |
+        python3 -m unittest
